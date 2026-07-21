@@ -44,3 +44,28 @@ jobs:
           name: Moch-Test-Result
           path: test-results.xml
           retention-days: 2
+
+  code-coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Code Coverage
+        run: npm run coverage
+
+      - name: Archive Test Results
+        uses: actions/upload-artifact@v7
+        with:
+          name: Code-Coverage-Result
+          path: coverage
+          retention-days: 2
