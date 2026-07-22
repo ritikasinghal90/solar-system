@@ -120,14 +120,14 @@ jobs:
 
       - name: Build Image Tag
         run: |
-          echo "IMAGE_TAG=${{ vars.DOCKERHUB_USERNAME }}/github-demo-repo:${{ github.sha::7 }}" > $GITHUB_ENV
+          echo "IMAGE=${{ vars.DOCKERHUB_USERNAME }}/github-demo-repo:${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Build and push
         uses: docker/build-push-action@v7
         with:
           context: .
           push: false
-          tags: ${{ env.IMAGE_TAG }}
+          tags: ${{ env.IMAGE }}
 
       - name: Docker Image Test
         run: |
@@ -137,7 +137,7 @@ jobs:
           -e MONGO_URI=$MONGO_URI \
           -e MONGO_USERNAME=$MONGO_USERNAME \
           -e MONGO_PASSWORD=$MONGO_PASSWORD \
-          ${{ env.IMAGE_TAG }}
+          ${{ env.IMAGE }}
           
           echo "Testing Image Liveness"
           wget -q -O - 127.0.0.1:3000/live | grep 'live'
