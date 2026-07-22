@@ -108,6 +108,8 @@ jobs:
     name: Conternization
     runs-on: ubuntu-latest
     needs: [unit-testing, code-coverage]
+    permissions:
+      packages: write
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v7
