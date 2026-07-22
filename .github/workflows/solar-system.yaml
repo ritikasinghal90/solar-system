@@ -24,6 +24,16 @@ jobs:
           - operating_system: macos-latest
     name: Unit Testing
     runs-on: ${{ matrix.operating_system }}
+    services:
+      mongo-db:
+        image: siddharth67/mongo-db:non-prod
+        ports:
+          - 27017:27017
+    # will override workflow level env
+    env:
+      MONGO_URI: 'mongodb//localhost:27017/superData'
+      MONGO_USERNAME: ono-prod-user
+      MONGO_PASSWORD: non-prod-password
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v7
