@@ -1,183 +1,27 @@
 name: Solar System Workflow
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - 'main'
-      - 'feature/**'
-
-env:
-  MONGO_URI: 'mongodb+srv://supercluster.d83jj.mongodb.net/superData'
-  MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
-  MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+    workflow_dispatch:
+    push:
+        branches:
+            - 'main'
+            - 'feature/*'
 
 jobs:
-  unit-testing:
-    strategy:
-      matrix:
-        nodejs_version: [ 18, 20 ]
-        operating_system: [ ubuntu-latest, macos-latest ]
-        exclude:
-          - nodejs_version: 18
-            operating_system: macos-latest
-          - operating_system: macos-latest
-    name: Unit Testing
-    runs-on: ${{ matrix.operating_system }}
-    services:
-      mongo-db:
-        image: siddharth67/mongo-db:non-prod
-        ports:
-          - 27017:27017
-    # will override workflow level env
-    env:
-      MONGO_URI: 'mongodb://localhost:27017/superData'
-      MONGO_USERNAME: non-prod-user
-      MONGO_PASSWORD: non-prod-password
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v7
+    unit-testing:
+        name: Unit Testing
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v7
+            
+            - name: Setup NodeJS Version - 18
+              uses: actions/setup-node@v7
+              with:
+                node-version: '18'
 
-      - name: Setup Node - ${{ matrix.nodejs_version }}
-        uses: actions/setup-node@v7
-        with:
-          node-version: ${{ matrix.nodejs_version }}
+            - name: Install Dependencies
+              run: npm install
 
-      - name: Cache node modules
-        id: cache-npm
-        uses: actions/cache@v4
-        env:
-          cache-name: cache-node-modules
-        with:
-          # npm cache files are stored in `~/.npm` on Linux/macOS
-          path: node_modules
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Unit Testing
-        id: nodejs-unit-testing-step
-        run: npm test
-
-      - name: Archive Test Results
-#        if: steps.nodejs-unit-testing-step.outcome == 'failure' || steps.nodejs-unit-testing-step.outcome == 'success'
-#        if: failure()
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: Moch-Test-Result
-          path: test-results.xml
-          retention-days: 2
-
-  code-coverage:
-    name: Code Coverage
-    container:
-      image: node:18
-    services:
-      mongo-db:
-        image: siddharth67/mongo-db:non-prod
-    env:
-      MONGO_URI: 'mongodb://mongo-db:27017/superData'
-      MONGO_USERNAME: non-prod-user
-      MONGO_PASSWORD: non-prod-password
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v7
-
-#      - name: Setup Node
-#        uses: actions/setup-node@v7
-#        with:
-#          node-version: 18
-
-      - name: Cache node modules
-        id: cache-npm
-        uses: actions/cache@v4
-        env:
-          cache-name: cache-node-modules
-        with:
-          # npm cache files are stored in `~/.npm` on Linux/macOS
-          path: node_modules
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Code Coverage
-        continue-on-error: true
-        run: npm run coverage
-
-      - name: Archive Test Results
-        uses: actions/upload-artifact@v7
-        with:
-          name: Code-Coverage-Result
-          path: coverage
-          retention-days: 2
-
-  docker:
-    name: Conternization
-    runs-on: ubuntu-latest
-    needs: [unit-testing, code-coverage]
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v7
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build Image URL
-        run: |
-          echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
-
-      - name: Build Image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          push: false
-          tags: ${{ vars.DOCKERHUB_USERNAME }}/github-demo-repo:${{ env.IMAGE_TAG }}
-
-      - name: Test Image
-        run: |
-          docker images
-          docker run -d --name solar-system \
-          -p 3000:3000 \
-          -e MONGO_URI=$MONGO_URI \
-          -e MONGO_USERNAME=$MONGO_USERNAME \
-          -e MONGO_PASSWORD=$MONGO_PASSWORD \
-          ${{ vars.DOCKERHUB_USERNAME }}/github-demo-repo:${{ env.IMAGE_TAG }}
-          
-          echo "Testing Image Liveness"
-          wget -q -O - 127.0.0.1:3000/live | grep 'live'
-          
-      - name: Push Image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ vars.DOCKERHUB_USERNAME }}/github-demo-repo:${{ env.IMAGE_TAG }}
-            ghcr.io/${{ github.repository_owner }}/solar-system:${{ env.IMAGE_TAG }}
-      
-          
+            - name: Unit Testing
+              run: npm test
