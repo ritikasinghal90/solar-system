@@ -41,7 +41,7 @@ jobs:
               run: npm test
 
             - name: Archive Unit Test Result
-              if: steps.unit-test.outcome == 'failure'
+              if: failure()
               uses: actions/upload-artifact@v7
               with:
                 name: Moch-Test-Result
