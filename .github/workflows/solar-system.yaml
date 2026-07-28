@@ -23,6 +23,15 @@ jobs:
               - nodejs_version: 18
                 os: macos-latest
               - os: macos-latest
+        services:
+          mongodb-service:
+            image: sidhharth67/mongo-db:non-prod
+            ports:
+              - 27017:27017
+        env:
+          MONGO_URI: 'mongodb://localhost:27017/superData'
+          MONGO_USERNAME: non-prod-user
+          MONGO_PASSWORD: non-prod-password
         runs-on: ${{ matrix.os }}
         steps:
             - name: Checkout Repository
