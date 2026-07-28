@@ -74,14 +74,23 @@ jobs:
     code-coverage:
       name: Code COverage
       runs-on: ubuntu-latest
+      container:
+          image: node:18
+      services:
+        mongodb-service:
+          image: siddharth67/mongo-db:non-prod
+      env:
+        MONGO_URI: 'mongodb://mongodb-service:27017/superData'
+        MONGO_USERNAME: non-prod-user
+        MONGO_PASSWORD: non-prod-password
       steps:
         - name: Checkout Repository
           uses: actions/checkout@v7
 
-        - name: Setup NodeJS Version - 18
-          uses: actions/setup-node@v7
-          with:
-            node-version: 18
+#        - name: Setup NodeJS Version - 18
+#          uses: actions/setup-node@v7
+#          with:
+#            node-version: 18
 
         - uses: actions/cache@v6
           id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
