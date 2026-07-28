@@ -25,7 +25,7 @@ jobs:
               - os: macos-latest
         services:
           mongodb-service:
-            image: sidhharth67/mongo-db:non-prod
+            image: siddharth67/mongo-db:non-prod
             ports:
               - 27017:27017
         env:
