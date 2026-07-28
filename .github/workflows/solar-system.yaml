@@ -145,14 +145,9 @@ jobs:
           with:
             context: .
             push: true
-            tags: ${{ vars.DOCKERHUB_USERNAME }}/github-demo-repo:${{ github.sha }}
-
-        - name: GHCR Push
-          uses: docker/build-push-action@v7
-          with:
-            context: .
-            push: true
-            tags: ghcr.io/${{ github.repository_owner }}/github-demo-repo:${{ github.sha }}
-
+            tags: |
+              ${{ vars.DOCKERHUB_USERNAME }}/github-demo-repo:${{ github.sha }}
+              ghcr.io/${{ github.repository_owner }}/github-demo-repo:${{ github.sha }}
+            
 
 
