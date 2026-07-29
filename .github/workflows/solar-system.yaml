@@ -190,9 +190,11 @@ jobs:
             echo "kubectl version --short"
 
         - name: Get Nginx Ingress Controller IP
-          run: |
+#          run: |
 #            echo "INGRESS_IP=$(kubectl -n ingress-nginx get svc ingress-nginx-controller -o=jsonpath='{.status.loadbalancer.ingress[0].ip}')" >> GITHUB_ENV
+          run: |
             echo "INGRESS_IP=172.234.45.65" >> "$GITHUB_ENV"     #For testing
+            
 
         - name: Replace Token In Manifest Files
           uses: cschleiden/replace-tokens@v1
