@@ -170,6 +170,8 @@ jobs:
     dev-deploy:
       needs: [docker]
       runs-on: ubuntu-latest
+      outputs:
+        APP_INGRESS_URL: ${{ steps.app-ingress-host.outputs.APP_INGRESS_HOST }}
       steps:
         - name: Checkout Repository
           uses: actions/checkout@v7
@@ -225,6 +227,26 @@ jobs:
         - name: Deploy To Dev
           run: |
             echo "kubectl apply -f kubernetes/development"
+            
+        - name: Get Application Ingress Host URL
+          id: app-ingress-host
+#          run: |
+#            echo "APP_INGRESS_HOST=$(kubectl -n ${{ vars.NAMESPACE }} get ingress -o jsonpath='{.items[0].spec.tls.hosts[0]}')"
+          run: |
+            echo "APP_INGRESS_HOST=solar-system-${{ vars.NAMESPACE }}.${{ env.INGRESS_IP }}.nip.io" >> "$GITHUB_OUTPUT"
+
+    dev-integration-testing:
+      name: Dev Integration Testing
+      needs: [dev-deploy]
+      runs-on: ubuntu-latest
+      steps:
+        - name: Test URL Output curl and jq
+          env:
+            URL: ${{ needs.dev-deploy.outputs.APP_INGRESS_URL }}
+          run: |
+            echo $URL
+            echo "----------"
+            echo "curl https://$URL/live -s -k | jq -r .status | grep live"
 
 
             
