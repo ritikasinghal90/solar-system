@@ -125,7 +125,6 @@ jobs:
           with:
             pattern: Mocha-Test-Result-*
             path: reports
-            merge-multiple: true
 
         - name: Download Code Coverage Artifact
           uses: actions/download-artifact@v8
