@@ -42,7 +42,7 @@ jobs:
       - name: Install Kubectl CLI
         uses: azure/setup-kubectl@v4
         with:
-          version: {{ inputs.kubectl-version }}
+          version: '{{ inputs.kubectl-version }}'
 
       - name: Setup Kubeconfig
         uses: azure/k8s-set-context@v5
