@@ -197,7 +197,7 @@ jobs:
       uses: ./.github/workflows/reuse-deployment.yaml
       secrets:
         k8s_Kubeconfig: ${{ secrets.KUBECONFIG }}
-        mongodb-password: $MONGO_PASSWORD
+        mongodb-password: ${{ secrets.MONGO_PASSWORD }}
 
     prod-integration-testing:
       name: Prod Integration Testing
