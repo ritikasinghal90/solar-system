@@ -2,6 +2,24 @@ name: Deployment - Reusable Workflow
 
 on:
   workflow_call:
+    inputs:
+      mongodb-uri:
+        required: true
+        type: string
+      kubectl-version:
+        description: provide the required Kubectl version
+        default: v1.26.0
+        required: false
+        type: string
+      k8s-manifest-dir:
+        description: Directory containing Kubernetes manifest files
+        default: kubernetes/
+        required: true
+        type: string
+      environment:
+        description: 'Environment to run tests against'
+        type: string
+        required: true
     secrets:
       k8s_Kubeconfig:
         required: true
@@ -13,7 +31,7 @@ jobs:
     name: Reusable Deploy Job
     runs-on: ubuntu-latest
     environment:
-      name: development
+      name: ${{ inputs.environment }}
       url: https://${{ steps.app-ingress-host.outputs.APP_INGRESS_HOST }}
     outputs:
       APP_INGRESS_URL: ${{ steps.app-ingress-host.outputs.APP_INGRESS_HOST }}
@@ -24,7 +42,7 @@ jobs:
       - name: Install Kubectl CLI
         uses: azure/setup-kubectl@v4
         with:
-          version: 'v1.26.0'
+          version: {{ inputs.kubectl-version }}
 
       - name: Setup Kubeconfig
         uses: azure/k8s-set-context@v5
@@ -48,7 +66,7 @@ jobs:
         with:
           tokenPrefix: '_{_'
           tokenSuffix: '_}_'
-          files: '["kubernetes/development/*.yaml"]'
+          files: '["${{ inputs.k8s-manifest-dir }}*.yaml"]'
         env:
           NAMESPACE: ${{ vars.NAMESPACE }}
           REPLICAS: ${{ vars.REPLICAS }}
@@ -62,8 +80,8 @@ jobs:
       - name: Create Mongodb Secret
         run: |
           echo "kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
-          --from-literal=MONGO_URI=$MONGO_URI \
-          --from-literal=MONGO_USERNAME=$MONGO_USERNAME \
+          --from-literal=MONGO_URI=${{ inputs.mongodb-uri }} \
+          --from-literal=MONGO_USERNAME=${{ vars.MONGO_USERNAME }} \
           --from-literal=MONGO_PASSWORD=${{ secrets.mongodb-password }} \
           --save-config \
           --dry-run=client \
@@ -71,7 +89,7 @@ jobs:
 
       - name: Deploy To Dev
         run: |
-          echo "kubectl apply -f kubernetes/development"
+          echo "kubectl apply -f ${{ inputs.k8s-manifest-dir }}"
 
       - name: Get Application Ingress Host URL
         id: app-ingress-host
