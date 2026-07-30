@@ -42,7 +42,7 @@ jobs:
       - name: Install Kubectl CLI
         uses: azure/setup-kubectl@v4
         with:
-          version: '{{ inputs.kubectl-version }}'
+          version: "{{ inputs.kubectl-version }}"
 
       - name: Setup Kubeconfig
         uses: azure/k8s-set-context@v5
@@ -66,7 +66,7 @@ jobs:
         with:
           tokenPrefix: '_{_'
           tokenSuffix: '_}_'
-          files: '["${{ inputs.k8s-manifest-dir }}*.yaml"]'
+          files: ["${{ inputs.k8s-manifest-dir }}*.yaml"]
         env:
           NAMESPACE: ${{ vars.NAMESPACE }}
           REPLICAS: ${{ vars.REPLICAS }}
