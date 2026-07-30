@@ -8,7 +8,7 @@ on:
       mongodb-password:
         required: true
 
-job:
+jobs:
   reuse-deploy:
     name: Reusable Deploy Job
     runs-on: ubuntu-latest
