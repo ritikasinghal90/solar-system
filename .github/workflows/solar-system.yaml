@@ -47,17 +47,22 @@ jobs:
 #              shell: bash
 #              run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
 
-            - uses: actions/cache@v6
-              id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
-              with:
-#                path: ${{ steps.npm-cache-dir.outputs.dir }}
-                path: node_modules
-                key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-                restore-keys: |
-                  ${{ runner.os }}-node
+#            - uses: actions/cache@v6
+#              id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
+#              with:
+##                path: ${{ steps.npm-cache-dir.outputs.dir }}
+#                path: node_modules
+#                key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+#                restore-keys: |
+#                  ${{ runner.os }}-node
+#
+#            - name: Install Dependencies
+#              run: npm install
 
-            - name: Install Dependencies
-              run: npm install
+            - name: Composite Action - Cache & Install NPM Packages
+              uses: ./.github/actions/npm-action
+              with:
+                path: node-modules
 
             - name: Unit Testing
               id: unit-test
@@ -92,16 +97,21 @@ jobs:
 #          with:
 #            node-version: 18
 
-        - uses: actions/cache@v6
-          id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
-          with:
-            path: node_modules
-            key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-            restore-keys: |
-              ${{ runner.os }}-node
+#        - uses: actions/cache@v6
+#          id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
+#          with:
+#            path: node_modules
+#            key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+#            restore-keys: |
+#              ${{ runner.os }}-node
+#
+#        - name: Install Dependencies
+#          run: npm install
 
-        - name: Install Dependencies
-          run: npm install
+        - name: Composite Action - Cache & Install NPM Packages
+          uses: ./.github/actions/npm-action
+          with:
+            path: node-modules
 
         - name: Run Code Coverage
           continue-on-error: true
@@ -114,27 +124,27 @@ jobs:
             path: coverage
             retention-days: 2
 
-    report-s3:
-      name: AWS S3 - Upload Reports
-      needs: [unit-testing, code-coverage]
-      runs-on: ubuntu-latest
-      continue-on-error: true
-      steps:
-        - name: Download Mocha Test Artifacts
-          uses: actions/download-artifact@v8
-          with:
-            pattern: Mocha-Test-Result-*
-            path: reports
-
-        - name: Download Code Coverage Artifact
-          uses: actions/download-artifact@v8
-          with:
-            name: Code-Coverage-Results
-            path: reports
-
-        - name: List Files
-          run: |
-            ls -ltra reports
+#    report-s3:
+#      name: AWS S3 - Upload Reports
+#      needs: [unit-testing, code-coverage]
+#      runs-on: ubuntu-latest
+#      continue-on-error: true
+#      steps:
+#        - name: Download Mocha Test Artifacts
+#          uses: actions/download-artifact@v8
+#          with:
+#            pattern: Mocha-Test-Result-*
+#            path: reports
+#
+#        - name: Download Code Coverage Artifact
+#          uses: actions/download-artifact@v8
+#          with:
+#            name: Code-Coverage-Results
+#            path: reports
+#
+#        - name: List Files
+#          run: |
+#            ls -ltra reports
 
 
 

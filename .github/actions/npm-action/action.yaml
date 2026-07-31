@@ -1,0 +1,22 @@
+name: 'NPM Custom Action'
+description: 'Installing and Caching NPM Packages'
+inputs:
+  path:
+    description: Path of npm dependency folder
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Cache NPM Dependencies
+      uses: actions/cache@v6
+      id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
+      with:
+        # path: ${{ steps.npm-cache-dir.outputs.dir }}
+        path: {{ inputs.path }}
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node
+
+    - name: Install Dependencies
+      run: npm install
+
