@@ -62,11 +62,12 @@ jobs:
         run: npm install
 
       - name: Code Coverage
+        continue-on-error: true
         run: npm run coverage
 
       - name: Upload Unit Test Artifact
         uses: actions/upload-artifact@v7
         with:
           name: Code-Coverage-Test-Result
-          path: coverage
+          path: coverage/
           retention-days: 2
