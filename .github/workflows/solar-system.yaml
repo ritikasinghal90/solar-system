@@ -15,15 +15,22 @@ env:
 jobs:
   unit-testing:
     name: Unit testing
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        nodejs_version: [18, 19, 20]
+        os: [ ubuntu-latest, macos-latest ]
+        exclude:
+          - os: macos-latest
+            nodejs_version: 18
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v7
 
-      - name: Setup Nodejs 18
+      - name: Setup Nodejs ${{ matrix.nodejs_version }}
         uses: actions/setup-node@v7
         with:
-          node-version: 18
+          node-version: ${{ matrix.nodejs_version }}
 
       - name: Install Dependencies
         run: npm install
@@ -34,5 +41,6 @@ jobs:
       - name: Upload Unit Test Artifact
         uses: actions/upload-artifact@v7
         with:
-          name: Moch-Test-Result
+          name: Moch-Test-Result-${{ matrix.nodejs_version }}-${{ runner.os }}
           path: test-results.xml
+          retention-days: 2
