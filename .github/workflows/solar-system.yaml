@@ -1,4 +1,4 @@
-name: Solar Syatem Workflow
+name: Solar System Workflow
 
 on:
   workflow_dispatch:
@@ -21,7 +21,7 @@ jobs:
           node-version: 18
 
       - name: Install Dependencies
-        run: npn install
+        run: npm install
 
       - name: Run unit Testcases
         run: npm test
