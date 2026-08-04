@@ -30,3 +30,9 @@ jobs:
 
       - name: Run unit Testcases
         run: npm test
+
+      - name: Upload Unit Test Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Moch-Test-Result
+          path: test-results.xml
