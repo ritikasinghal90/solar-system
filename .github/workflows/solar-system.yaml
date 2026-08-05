@@ -118,7 +118,7 @@ jobs:
           -e MONGO_URI=${{ env.MONGO_URI }} \
           -e MONGO_USERNAME=${{ env.MONGO_USERNAME }} \
           -e MONGO_PASSWORD=${{ env.MONGO_PASSWORD }} \
-          ${{ vars.DOCKER_USERNAME }}/github-demo-repo:${{ github.sha }}
+          ${{ vars.DOCKERHUB_USERNAME }}/github-demo-repo:${{ github.sha }}
           
           echo "Testing Image URL using wget"
           wget -q -O - 127.0.0.1:3000/live | grep -i 'live'
