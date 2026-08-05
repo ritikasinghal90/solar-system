@@ -12,6 +12,10 @@ env:
   MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
   MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   unit-testing:
     name: Unit testing
@@ -103,12 +107,21 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build Image
         uses: docker/build-push-action@v7
         with:
           context: .
           push: false
-          tags: ${{ vars.DOCKERHUB_USERNAME }}/github-demo-repo:${{ github.sha }}
+          tags: |
+            ${{ vars.DOCKERHUB_USERNAME }}/github-demo-repo:${{ github.sha }}
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
 
       - name: Docker Image Test
         run: |
