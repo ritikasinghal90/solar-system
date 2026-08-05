@@ -12,10 +12,6 @@ env:
   MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
   MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
 
-permissions:
-  contents: read
-  packages: write
-
 jobs:
   unit-testing:
     name: Unit testing
@@ -97,6 +93,9 @@ jobs:
     name: Containerization
     runs-on: ubuntu-latest
     needs: [unit-testing, code-coverage]
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v7
