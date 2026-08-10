@@ -123,7 +123,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           path: testing-artifacts
-          name: Code Coverage Results
+          name: Code-Coverage-Test-Result
 
       - name: Check files
         run: |
