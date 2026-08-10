@@ -61,7 +61,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: Moch-Test-Result-${{ matrix.nodejs_version }}-${{ runner.os }}
-          path: test-results-${{ matrix.nodejs_version }}-${{ runner.os }}.xml
+          path: test-results.xml
           retention-days: 2
 
   code-coverage:
