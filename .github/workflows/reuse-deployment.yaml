@@ -26,9 +26,9 @@ on:
         default: dev
         type: string
         required: true
-      outputs:
-        application-url:
-          value: ${{ jobs.reuse-deploy.outputs.APP_INGRESS_URL }}
+    outputs:
+      application-url:
+        value: ${{ jobs.reuse-deploy.outputs.APP_INGRESS_URL }}
 
 
 jobs:
