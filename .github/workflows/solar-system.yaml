@@ -117,7 +117,6 @@ jobs:
         with:
           path: testing-artifacts
           pattern: Moch-Test-Result-*
-          merge-multiple: true
 
       - name: Download Code Coverage Artifacts
         uses: actions/download-artifact@v8
