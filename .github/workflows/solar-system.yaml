@@ -61,7 +61,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: Moch-Test-Result-${{ matrix.nodejs_version }}-${{ runner.os }}
-          path: test-results.xml
+          path: test-results-${{ matrix.nodejs_version }}-${{ runner.os }}.xml
           retention-days: 2
 
   code-coverage:
@@ -107,109 +107,131 @@ jobs:
           path: coverage/
           retention-days: 2
 
-  docker:
-    name: Containerization
+  report-s3:
+    needs: [code-coverage, unit-testing]
     runs-on: ubuntu-latest
-    needs: [unit-testing, code-coverage]
-    permissions:
-      contents: read
-      packages: write
+    continue-on-error: true
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v7
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
+      - name: Download Unit Testing Artifacts
+        uses: actions/download-artifact@v8
         with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          path: testing-artifacts
+          pattern: Moch-Test-Result-*
+          merge-multiple: true
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v4
+      - name: Download Code Coverage Artifacts
+        uses: actions/download-artifact@v8
         with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          path: testing-artifacts
+          name: Code Coverage Results
 
-      - name: Build Image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          push: false
-          tags: ${{ vars.DOCKERHUB_USERNAME }}/github-demo-repo:${{ github.sha }}
-
-
-      - name: Docker Image Test
+      - name: Check files
         run: |
-          docker images
-          docker run -d --name solar-systaem-app \
-          -p 3000:3000 \
-          -e MONGO_URI=${{ env.MONGO_URI }} \
-          -e MONGO_USERNAME=${{ env.MONGO_USERNAME }} \
-          -e MONGO_PASSWORD=${{ env.MONGO_PASSWORD }} \
-          ${{ vars.DOCKERHUB_USERNAME }}/github-demo-repo:${{ github.sha }}
-          
-          echo "Testing Image URL using wget"
-          wget -q -O - 127.0.0.1:3000/live | grep -i 'live'
+          ls -ltra testing-artifacts
 
-      - name: Push Image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ vars.DOCKERHUB_USERNAME }}/github-demo-repo:${{ github.sha }}
-#            ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha }}
-
-  dev-deploy:
-    name: Dev Deployment
-    if: contains(github.ref, 'feature/')
-    needs: docker
-    uses: ./.github/workflows/reuse-deployment.yaml
-    secrets:
-      k8s-kubeconfig: ${{ secrets.KUBECONFIG }}
-      mongodb-password: ${{ secrets.MONGO_PASSWORD }}
-    with:
-      mongodb-uri: ${{ vars.MONGO_URI }}
-      k8s-manifest-dir: kubernetes/development/
-      environment: development
-
-
-  dev-integration-testing:
-    name: Dev Integration Testing
-    if: contains(github.ref, 'feature/')
-    needs: dev-deploy
-    runs-on: ubuntu-latest
-    steps:
-      - name: Test URL Output Using curl and jq
-        env:
-          URL: ${{ needs.dev-deploy.outputs.application-url }}
-        run: |
-          echo "curl $URL"
-          echo "curl https://$URL/live -s -k | jq -r .status | grep -i live"
-
-  prod-deploy:
-    name: Prod Deployment
-    if: github.ref == 'ref/heads/main'
-    needs: docker
-    uses: ./.github/workflows/reuse-deployment.yaml
-    secrets:
-      k8s-kubeconfig: ${{ secrets.KUBECONFIG }}
-      mongodb-password: ${{ secrets.MONGO_PASSWORD }}
-    with:
-      mongodb-uri: ${{ vars.MONGO_URI }}
-      k8s-manifest-dir: kubernetes/production/
-      environment: production
-
-  prod-integration-testing:
-    name: Prod Integration Testing
-    if: github.ref == 'ref/heads/main'
-    needs: prod-deploy
-    runs-on: ubuntu-latest
-    steps:
-      - name: Test URL Output Using curl and jq
-        env:
-          URL: ${{ needs.dev-deploy.outputs.application-url }}
-        run: |
-          echo "curl $URL"
-          echo "curl https://$URL/live -s -k | jq -r .status | grep -i live"
+#  docker:
+#    name: Containerization
+#    runs-on: ubuntu-latest
+#    needs: [unit-testing, code-coverage]
+#    permissions:
+#      contents: read
+#      packages: write
+#    steps:
+#      - name: Checkout Repo
+#        uses: actions/checkout@v7
+#
+#      - name: Login to Docker Hub
+#        uses: docker/login-action@v4
+#        with:
+#          username: ${{ vars.DOCKERHUB_USERNAME }}
+#          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+#
+#      - name: Login to GitHub Container Registry
+#        uses: docker/login-action@v4
+#        with:
+#          registry: ghcr.io
+#          username: ${{ github.repository_owner }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Build Image
+#        uses: docker/build-push-action@v7
+#        with:
+#          context: .
+#          push: false
+#          tags: ${{ vars.DOCKERHUB_USERNAME }}/github-demo-repo:${{ github.sha }}
+#
+#
+#      - name: Docker Image Test
+#        run: |
+#          docker images
+#          docker run -d --name solar-systaem-app \
+#          -p 3000:3000 \
+#          -e MONGO_URI=${{ env.MONGO_URI }} \
+#          -e MONGO_USERNAME=${{ env.MONGO_USERNAME }} \
+#          -e MONGO_PASSWORD=${{ env.MONGO_PASSWORD }} \
+#          ${{ vars.DOCKERHUB_USERNAME }}/github-demo-repo:${{ github.sha }}
+#
+#          echo "Testing Image URL using wget"
+#          wget -q -O - 127.0.0.1:3000/live | grep -i 'live'
+#
+#      - name: Push Image
+#        uses: docker/build-push-action@v7
+#        with:
+#          context: .
+#          push: true
+#          tags: |
+#            ${{ vars.DOCKERHUB_USERNAME }}/github-demo-repo:${{ github.sha }}
+##            ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha }}
+#
+#  dev-deploy:
+#    name: Dev Deployment
+#    if: contains(github.ref, 'feature/')
+#    needs: docker
+#    uses: ./.github/workflows/reuse-deployment.yaml
+#    secrets:
+#      k8s-kubeconfig: ${{ secrets.KUBECONFIG }}
+#      mongodb-password: ${{ secrets.MONGO_PASSWORD }}
+#    with:
+#      mongodb-uri: ${{ vars.MONGO_URI }}
+#      k8s-manifest-dir: kubernetes/development/
+#      environment: development
+#
+#
+#  dev-integration-testing:
+#    name: Dev Integration Testing
+#    if: contains(github.ref, 'feature/')
+#    needs: dev-deploy
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Test URL Output Using curl and jq
+#        env:
+#          URL: ${{ needs.dev-deploy.outputs.application-url }}
+#        run: |
+#          echo "curl $URL"
+#          echo "curl https://$URL/live -s -k | jq -r .status | grep -i live"
+#
+#  prod-deploy:
+#    name: Prod Deployment
+#    if: github.ref == 'ref/heads/main'
+#    needs: docker
+#    uses: ./.github/workflows/reuse-deployment.yaml
+#    secrets:
+#      k8s-kubeconfig: ${{ secrets.KUBECONFIG }}
+#      mongodb-password: ${{ secrets.MONGO_PASSWORD }}
+#    with:
+#      mongodb-uri: ${{ vars.MONGO_URI }}
+#      k8s-manifest-dir: kubernetes/production/
+#      environment: production
+#
+#  prod-integration-testing:
+#    name: Prod Integration Testing
+#    if: github.ref == 'ref/heads/main'
+#    needs: prod-deploy
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Test URL Output Using curl and jq
+#        env:
+#          URL: ${{ needs.dev-deploy.outputs.application-url }}
+#        run: |
+#          echo "curl $URL"
+#          echo "curl https://$URL/live -s -k | jq -r .status | grep -i live"
