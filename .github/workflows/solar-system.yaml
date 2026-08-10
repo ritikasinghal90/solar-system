@@ -54,7 +54,7 @@ jobs:
 #        run: npm install
 
       - name: Composite Action
-        uses: ./.github/custom-actions/npm-action
+        uses: ./.github/workflows/custom-actions/npm-action
         with:
           npm-cache-path: node_modules
 
@@ -102,7 +102,7 @@ jobs:
 #        run: npm install
 
       - name: Composite Action
-        uses: ./.github/custom-actions/npm-action
+        uses: ./.github/workflows/custom-actions/npm-action
         with:
           npm-cache-path: node_modules
 
