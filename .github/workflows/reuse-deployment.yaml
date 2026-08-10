@@ -7,13 +7,32 @@ on:
         required: true
       mongodb-password:
         required: true
+    inputs:
+      mongodb-uri:
+        type: string
+        required: true
+      kubectl-version:
+        description: Provide the required kubectl version
+        default: v1.27.0
+        type: string
+        required: false
+      k8s-manifest-dir:
+        description: Directory containing k8s manifest files
+        default: kubernetes/
+        type: string
+        required: true
+      environment:
+        description: Provide the Deployment Environment
+        default: dev
+        type: string
+        required: true
 
 
 jobs:
   reuse-deploy:
     runs-on: ubuntu-latest
     environment:
-      name: development
+      name: ${{ inputs.environment }}
       url: https://${{ steps.set-ingress-host.outputs.APP_INGRESS_HOST }}
     outputs:
       APP_INGRESS_URL: ${{ steps.set-ingress-host.outputs.APP_INGRESS_HOST }}
@@ -24,7 +43,7 @@ jobs:
       - name: Install Kubectl
         uses: azure/setup-kubectl@v4
         with:
-          version: 'v1.26.0'
+          version: '${{ inputs.kubectl-version }}'
 
       - name: Setup Kubeconfig
         uses: azure/k8s-set-context@v5
@@ -45,7 +64,7 @@ jobs:
         with:
           tokenPrefix: '_{_'
           tokenSuffix: '_}_'
-          files: '["kubernetes/development/*.yaml"]'
+          files: '["${{ inputs.k8s-manifest-dir }}*.yaml"]'
         env:
           NAMESPACE: ${{ vars.NAMESPACE }}
           REPLICAS: ${{ vars.REPLICAS }}
@@ -54,12 +73,12 @@ jobs:
 
       - name: Check Files
         run: |
-          cat kubernetes/development/*.yaml
+          cat ${{ inputs.k8s-manifest-dir }}*.yaml
 
       - name: Crete mongodb Secret
         run: |
           echo "kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
-          --from-literal=MONGO_URI=${{ env.MONGO_URI }} \
+          --from-literal=MONGO_URI=${{ inputs.mongodb-uri }} \
           --from-literal=MONGO_USERNAME=${{ vars.MONGO_USERNAME }} \
           --from-literal=MONGO_PASSWORD=${{ secrets.mongodb-password }} \
           --save-config \
@@ -68,7 +87,7 @@ jobs:
 
       - name: Deploy To De Env
         run: |
-          echo "kubectl apply -f kubernetes/Development"
+          echo "kubectl apply -f ${{ inputs.k8s-manifest-dir }}"
 
       - name: Set Application Ingress Host
         id: set-ingress-host
