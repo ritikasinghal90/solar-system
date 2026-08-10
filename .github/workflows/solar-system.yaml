@@ -42,16 +42,21 @@ jobs:
         with:
           node-version: ${{ matrix.nodejs_version }}
 
-      - uses: actions/cache@v6
-        id: npm-cache
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+#      - uses: actions/cache@v6
+#        id: npm-cache
+#        with:
+#          path: node_modules
+#          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+#          restore-keys: |
+#            ${{ runner.os }}-node-
+#
+#      - name: Install Dependencies
+#        run: npm install
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Composite Action
+        uses: ./.github/custom-actions/npm-action
+        with:
+          npm-cache-path: node_modules
 
       - name: Run unit Testcases
         run: npm test
@@ -85,16 +90,21 @@ jobs:
 #        with:
 #          node-version: 18
 
-      - uses: actions/cache@v6
-        id: npm-cache
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+#      - uses: actions/cache@v6
+#        id: npm-cache
+#        with:
+#          path: node_modules
+#          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+#          restore-keys: |
+#            ${{ runner.os }}-node-
+#
+#      - name: Install Dependencies
+#        run: npm install
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Composite Action
+        uses: ./.github/custom-actions/npm-action
+        with:
+          npm-cache-path: node_modules
 
       - name: Code Coverage
         continue-on-error: true
