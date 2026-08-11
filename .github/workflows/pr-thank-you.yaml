@@ -1,0 +1,18 @@
+name: Test Workflow
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  testing-action:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Post PR Comment
+        uses: ritikasinghal90/docker-action-pr-giphy@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          giphy-api-token: ${{ secrets.GIPHY_API_TOKEN }}
